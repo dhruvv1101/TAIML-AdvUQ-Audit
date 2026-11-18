@@ -1,7 +1,5 @@
-# Data & Cache (Do NOT commit raw datasets or temporary caches)
+# Data (Do NOT commit raw datasets)
 data/
-cache/
-*.pkl
 *.npz
 *.mat
 

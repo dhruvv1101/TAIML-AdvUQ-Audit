@@ -79,6 +79,12 @@ Reveals the $6\times$ magnified mathematical perturbation ($|\eta| \times 6$) he
 ├── requirements.txt                  # Python dependencies
 ├── .gitignore                        # Clean repository tracking (excludes raw data and caches)
 │
+├── cache/                            # Precomputed model evaluation pickles (instant loading)
+│   ├── 4afe4784_MNIST_0.pkl                    # Multi-attack evaluation cache for MNIST
+│   ├── 4afe4784_CIFAR10_0.pkl                  # Multi-attack evaluation cache for CIFAR-10
+│   ├── 4afe4784_SVHN_0.pkl                     # Multi-attack evaluation cache for SVHN
+│   └── sweep_4afe4784_MNIST_0.pkl              # Epsilon sensitivity sweep cache
+│
 ├── results/                          # Audit deliverables and raw logs
 │   ├── TAIML_Report_Results_MultiDataset.docx  # Full written audit report (Sections 8-13)
 │   ├── all_results_4afe4784.csv                # Complete 2,568 evaluation rows across all units
@@ -91,7 +97,7 @@ Reveals the $6\times$ magnified mathematical perturbation ($|\eta| \times 6$) he
     └── presentation_attack_signatures.png      # 6x magnified perturbation heatmaps
 ```
 
-> **Note on Datasets:** In accordance with standard submission practices, large raw dataset binaries (`data/`) and temporary model cache files (`cache/`) are excluded from Git tracking via `.gitignore`. The audit script automatically downloads or formats standard torchvision datasets when run.
+> **Note on Data and Caches:** Precomputed evaluation `.pkl` caches are included in `cache/` so that running `python run_audit.py` loads and reproduces the entire report instantaneously without waiting for long CPU/GPU retrain cycles. Large raw image datasets (`data/`) remain excluded via `.gitignore`.
 
 ---
 
