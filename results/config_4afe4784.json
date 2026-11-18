@@ -1,0 +1,37 @@
+{
+  "datasets": [
+    "MNIST",
+    "CIFAR10",
+    "SVHN"
+  ],
+  "n_train": 3000,
+  "n_test": 1000,
+  "epochs": 10,
+  "T": 30,
+  "seeds": [
+    0
+  ],
+  "train_attacks": [
+    "BIM-A",
+    "BIM-B",
+    "APGD-reduced",
+    "Adaptive"
+  ],
+  "attacks": [
+    "FGSM",
+    "BIM-A",
+    "BIM-B",
+    "APGD-reduced",
+    "PGDL2",
+    "Jitter",
+    "Adaptive"
+  ],
+  "preset": "quick_user",
+  "lr": 0.001,
+  "wd": 1e-05,
+  "bs": 128,
+  "kl_w": 0.01,
+  "prior_sd": 0.2,
+  "dropout": 0.5,
+  "aug_cifar": true
+}
