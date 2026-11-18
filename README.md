@@ -70,6 +70,17 @@ Reveals the $6\times$ magnified mathematical perturbation ($|\eta| \times 6$) he
 
 ---
 
+## 🏛️ Model Architectures (Aligned with Official Huang et al. Repository)
+
+The model definitions in `run_audit.py` are directly aligned with the author's official open-source repository at [kuanhuang0624/AdvUQ](https://github.com/kuanhuang0624/AdvUQ/blob/main/util.py):
+
+* **`CNNMnist` / `CNNMnist_BNN`:** 2 convolutional layers ($64 \to 64$, valid padding $P=0$), $2\times2$ MaxPool, dense classification head ($9216 \to 128 \to 10$).
+* **`CNNCifar` / `CNNCifar_BNN`:** 6 convolutional layers arranged in three pairs of ($32 \to 64 \to 128$) with padding $P=1$ and three $2\times2$ MaxPools, followed by dense layers ($2048 \to 1024 \to 512 \to 10$).
+* **`CNNSVHN` / `CNNSVHN_BNN`:** 2 convolutional layers ($64 \to 64$, padding $P=0$), $2\times2$ MaxPool, followed by dense layers ($12544 \to 512 \to 128 \to 10$). This provides high representational capacity for SVHN house digits ($>70\%$ accuracy).
+* **Bayesian Neural Network (BNN) Integration:** The stochastic `BayesLinear` layer ($w = \mu + \text{softplus}(\rho) \cdot \epsilon$) is implemented at the final class prediction layer, directly mirroring `torchbnn.BayesLinear` in the author's code.
+
+---
+
 ## 📂 Repository Structure
 
 ```text

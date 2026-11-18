@@ -86,6 +86,10 @@ def _raw(name):
     if name in _RAW:
         return _RAW[name]
     root = os.path.join(ROOT, "data")
+    if not os.path.exists(root) or not os.path.exists(os.path.join(root, "MNIST")):
+        alt_root = os.path.abspath(os.path.join(ROOT, "..", "TAIML_AdvUQ", "data"))
+        if os.path.exists(alt_root):
+            root = alt_root
     if name == "MNIST":
         tr = torchvision.datasets.MNIST(root, True, download=False)
         te = torchvision.datasets.MNIST(root, False, download=False)
@@ -155,15 +159,21 @@ class BayesLinear(nn.Module):
 
 def conv_stack(ds):
     c = CH[ds][0]; C = nn.Conv2d; R = nn.ReLU; P = lambda: nn.MaxPool2d(2)
-    if ds in ["CIFAR10", "SVHN"]:
+    if ds == "CIFAR10":
+        # Exact CNNCifar backbone from Huang et al. (util.py)
         return nn.Sequential(C(c, 32, 3, padding=1), R(), C(32, 32, 3, padding=1), R(), P(),
                              C(32, 64, 3, padding=1), R(), C(64, 64, 3, padding=1), R(), P(),
                              C(64, 128, 3, padding=1), R(), C(128, 128, 3, padding=1), R(), P())
-    return nn.Sequential(C(c, 64, 3), R(), C(64, 64, 3), R(), P())
+    elif ds == "SVHN":
+        # Exact CNNSVHN 2-layer conv backbone from Huang et al. (util.py)
+        return nn.Sequential(C(c, 64, 3, padding=0), R(), C(64, 64, 3, padding=0), R(), P())
+    # Exact CNNMnist 2-layer conv backbone from Huang et al. (util.py)
+    return nn.Sequential(C(c, 64, 3, padding=0), R(), C(64, 64, 3, padding=0), R(), P())
 
 class Net(nn.Module):
     def __init__(self, ds, kind, mean, std):
         super().__init__()
+        self.ds = ds
         self.kind = kind
         self.p = CFG["dropout"]
         self.register_buffer("mean", mean)
@@ -171,8 +181,20 @@ class Net(nn.Module):
         self.conv = conv_stack(ds)
         c, hw = CH[ds]
         with torch.no_grad(): flat = self.conv(torch.zeros(1, c, hw, hw)).numel()
-        self.fc1 = nn.Linear(flat, 128)
-        self.out = BayesLinear(128, 10, CFG["prior_sd"]) if kind == "bnn" else nn.Linear(128, 10)
+        
+        # Dense classification head matching official Huang et al. AdvUQ architectures
+        if ds == "CIFAR10":
+            self.fc1 = nn.Linear(flat, 1024)
+            self.fc2 = nn.Linear(1024, 512)
+            self.out = BayesLinear(512, 10, CFG["prior_sd"]) if kind == "bnn" else nn.Linear(512, 10)
+        elif ds == "SVHN":
+            self.fc1 = nn.Linear(flat, 512)
+            self.fc2 = nn.Linear(512, 128)
+            self.out = BayesLinear(128, 10, CFG["prior_sd"]) if kind == "bnn" else nn.Linear(128, 10)
+        else: # MNIST
+            self.fc1 = nn.Linear(flat, 128)
+            self.fc2 = None
+            self.out = BayesLinear(128, 10, CFG["prior_sd"]) if kind == "bnn" else nn.Linear(128, 10)
 
     def feats(self, x):
         return self.conv((x - self.mean) / self.std).flatten(1)
@@ -180,6 +202,8 @@ class Net(nn.Module):
     def head(self, f, stoch=False):
         dr = (self.training or stoch) if self.kind == "mc" else self.training
         h = F.relu(self.fc1(F.dropout(f, self.p, training=dr)))
+        if self.fc2 is not None:
+            h = F.relu(self.fc2(F.dropout(h, self.p, training=dr)))
         h = F.dropout(h, self.p, training=dr)
         return self.out(h, stoch or self.training) if self.kind == "bnn" else self.out(h)
 
